@@ -11,6 +11,7 @@
 <body>
     <?php include './navbar.php' ?>
     <?php include './database.php' ?>
+    <?php include './editModal.php' ?>
     <?php
 
     if (isset($_POST['submit'])) {
@@ -27,7 +28,7 @@
     <div class="container my-5">
         <div class="row justify-content-center">
             <div class="col-lg-10">
-                <form method="POST" class="border border-secondary p-4 rounded shadow">
+                <form action="<?php echo $_SERVER['PHP_SELF'] ?>" method="POST" class="border border-secondary p-4 rounded shadow">
                     <div class="mb-3">
                         <label for="title" class="form-label">Title</label>
                         <input type="text" class="form-control" id="title" placeholder="Enter title..." name="title">
@@ -49,18 +50,20 @@
                 <?php
                 $sql = "SELECT * from `notes_table`";
                 $result = $conn->query($sql);
-
+                $counter = 0;
                 if ($result->num_rows > 0) {
                     while ($row = $result->fetch_assoc()) {
+                        $counter++;
                         echo '<div class="card my-3">
                                 <div class="card-header">
-                                    Note #1
+                                    Note №' . $counter . '
                                 </div>
                                 <div class="card-body">
                                     <h5 class="card-title">' . $row['title'] . '</h5>
                                     <p class="card-text">' . $row['description'] . '</p>
-                                    <a href="#" class="btn btn-primary">Edit</a>
-                                    <a href="#" class="btn btn-danger">Delete</a>
+                                    <button type="button" class="btn btn-primary edit" id="' . $row['id'] . '" data-bs-toggle="modal" 
+                                    data-bs-target="#exampleModal">Edit</button>
+                                    <a href="./delete.php?id=' . $row['id'] . '" class="btn btn-danger">Delete</a>
                                 </div>
                             </div>';
                     }
@@ -68,10 +71,52 @@
                     echo '<h4 class="mt-4 text-center">No notes. Create them!</h5>';
                 }
                 ?>
+                <div style="display: none;">
+                    <h4 class="mt-4 text-center" id="noText">No notes found.</h4>
+                </div>
             </div>
         </div>
     </div>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.bundle.min.js" integrity="sha384-HwwvtgBNo3bZJJLYd8oVXjrBZt8cqVSpeBNS5n7C8IVInixGAoxmnlMuBnhbgrkm" crossorigin="anonymous"></script>
+    <script>
+        const edit = document.querySelectorAll('.edit');
+        const editTitle = document.getElementById('editTitle')
+        const editDesc = document.getElementById('editDesc')
+        const hiddenInput = document.getElementById('hidden')
+        const cardBody = document.querySelectorAll('.card-body')
+        const noText = document.getElementById('noText')
+
+        edit.forEach(element => {
+            element.addEventListener('click', () => {
+                editTitle.value = element.parentElement.children[0].innerText
+                editDesc.value = element.parentElement.children[1].innerText
+                hiddenInput.value = element.id
+            })
+        })
+
+        const search = document.getElementById('search')
+        search.addEventListener('input', () => {
+            const value = search.value.toLowerCase()
+            var found = false
+
+            cardBody.forEach(element => {
+                titleText = element.children[0].innerText.toLowerCase()
+                titleDesc = element.children[1].innerText.toLowerCase()
+
+                if (titleText.includes(value) || titleDesc.includes(value)) {
+                    element.parentElement.style.display = 'block'
+                    found = true
+                } else {
+                    element.parentElement.style.display = 'none'
+                }
+            })
+            if (!found) {
+                noText.parentElement.style.display = 'block'
+            } else {
+                noText.parentElement.style.display = 'none'
+            }
+        })
+    </script>
 </body>
 
 </html>
